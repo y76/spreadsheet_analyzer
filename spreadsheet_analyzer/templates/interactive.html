@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sheet: {{ sheet_name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .columns-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .column-button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .column-button:hover {
+            background-color: #45a049;
+        }
+        .column-button.active {
+            background-color: #007bff;
+        }
+        .column-data {
+            display: none;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .column-data.active {
+            display: block;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            position: sticky;
+            top: 0;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .count {
+            font-weight: bold;
+            color: #555;
+            text-align: center;
+        }
+        .percentage-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        .percentage-bar-fill {
+            height: 100%;
+            background-color: #4CAF50;
+        }
+        .search-container {
+            margin-bottom: 20px;
+        }
+        #search-input {
+            padding: 10px;
+            width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .summary {
+            margin-bottom: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .summary p {
+            margin: 5px 0;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f2f2f2;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: white;
+            border-bottom: 1px solid white;
+            margin-bottom: -1px;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+            background-color: white;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .top-values {
+            margin-bottom: 20px;
+        }
+        .legend {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        #csv-export, #json-export {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        #csv-export:hover, #json-export:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sheet: {{ sheet_name }}</h1>
+        
+        <div class="summary">
+            <h2>Summary</h2>
+            <p>Total columns: <strong>{{ column_names|length }}</strong></p>
+            <p>Columns: {{ column_names|join(", ") }}</p>
+            <div>
+                <button id="csv-export">Export as CSV</button>
+                <button id="json-export">Export as JSON</button>
+            </div>
+        </div>
+        
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Search for columns...">
+        </div>
+        
+        <div class="columns-container">
+            {% for column in column_names %}
+            <button class="column-button" data-column="{{ column }}">{{ column }}</button>
+            {% endfor %}
+        </div>
+        
+        {% for column, column_data in data.items() %}
+        <div id="column-{{ column }}" class="column-data">
+            <h2>{{ column }}</h2>
+            <p>Unique values: <strong>{{ column_data.unique_count }}</strong></p>
+            
+            <div class="tabs">
+                <div class="tab active" data-tab="table-tab-{{ column }}">Table View</div>
+                <div class="tab" data-tab="chart-tab-{{ column }}">Chart View</div>
+            </div>
+            
+            <div id="table-tab-{{ column }}" class="tab-content active">
+                <table>
+                    <tr>
+                        <th>Value</th>
+                        <th>Count</th>
+                        <th>Percentage</th>
+                    </tr>
+                    {% for value in column_data.values %}
+                    <tr>
+                        <td>{{ value.value }}</td>
+                        <td class="count">{{ value.count }}</td>
+                        <td>
+                            {{ "%.2f"|format(value.percentage) }}%
+                            <div class="percentage-bar">
+                                <div class="percentage-bar-fill" style="width: {{ value.percentage }}%;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            
+            <div id="chart-tab-{{ column }}" class="tab-content">
+                <div class="top-values">
+                    <h3>Top 10 Values</h3>
+                    <canvas id="chart-{{ column }}" width="600" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <script>
+        // Function to show a specific column's data
+        function showColumnData(columnName) {
+            // Hide all column data sections
+            document.querySelectorAll('.column-data').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.column-button').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Show the selected column's data
+            const dataEl = document.getElementById('column-' + columnName);
+            if (dataEl) {
+                dataEl.classList.add('active');
+                
+                // Add active class to the button
+                document.querySelector(`.column-button[data-column="${columnName}"]`).classList.add('active');
+                
+                // Create chart if not already created
+                createColumnChart(columnName);
+            }
+        }
+        
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+                const tabContent = document.getElementById(tabId);
+                const columnData = this.closest('.column-data');
+                
+                // Deactivate all tabs and tab content in this column
+                columnData.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                columnData.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Activate this tab and its content
+                this.classList.add('active');
+                tabContent.classList.add('active');
+            });
+        });
+        
+        // Add click handlers to all column buttons
+        document.querySelectorAll('.column-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const columnName = this.getAttribute('data-column');
+                showColumnData(columnName);
+            });
+        });
+        
+        // Search functionality
+        document.getElementById('search-input').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            document.querySelectorAll('.column-button').forEach(button => {
+                const columnName = button.getAttribute('data-column').toLowerCase();
+                
+                if (columnName.includes(searchTerm)) {
+                    button.style.display = 'inline-block';
+                } else {
+                    button.style.display = 'none';
+                }
+            });
+        });
+        
+        // Export buttons
+        document.getElementById('csv-export').addEventListener('click', function() {
+            let csvContent = "Column,Value,Count,Percentage\n";
+            
+            {% for column, column_data in data.items() %}
+            {% for value in column_data.values %}
+            csvContent += `"{{ column }}","{{ value.value }}",{{ value.count }},{{ "%.2f"|format(value.percentage) }}\n`;
+            {% endfor %}
+            {% endfor %}
+            
+            downloadFile(csvContent, "{{ sheet_name }}_export.csv", "text/csv");
+        });
+        
+        document.getElementById('json-export').addEventListener('click', function() {
+            const jsonData = {{ data|tojson }};
+            const jsonContent = JSON.stringify(jsonData, null, 2);
+            downloadFile(jsonContent, "{{ sheet_name }}_export.json", "application/json");
+        });
+        
+        function downloadFile(content, fileName, contentType) {
+            const a = document.createElement("a");
+            const file = new Blob([content], { type: contentType });
+            a.href = URL.createObjectURL(file);
+            a.download = fileName;
+            a.click();
+        }
+        
+        // Create charts for columns
+        function createColumnChart(columnName) {
+            const canvas = document.getElementById(`chart-${columnName}`);
+            if (!canvas || canvas.getAttribute('data-initialized')) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            {% for column, column_data in data.items() %}
+            if (columnName === "{{ column }}") {
+                // Get top 10 values
+                const values = [
+                    {% for value in column_data.values[:10] %}
+                    "{{ value.value }}",
+                    {% endfor %}
+                ];
+                
+                const counts = [
+                    {% for value in column_data.values[:10] %}
+                    {{ value.count }},
+                    {% endfor %}
+                ];
+                
+                const percentages = [
+                    {% for value in column_data.values[:10] %}
+                    {{ "%.2f"|format(value.percentage) }},
+                    {% endfor %}
+                ];
+                
+                // Generate colors
+                const colors = [];
+                for (let i = 0; i < values.length; i++) {
+                    const hue = (i * 30) % 360;
+                    colors.push(`hsl(${hue}, 70%, 60%)`);
+                }
+                
+                // Draw the chart (simple bar chart)
+                const barWidth = canvas.width / values.length;
+                const maxCount = Math.max(...counts);
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw bars
+                for (let i = 0; i < values.length; i++) {
+                    const x = i * barWidth;
+                    const barHeight = (counts[i] / maxCount) * (canvas.height - 100);
+                    const y = canvas.height - barHeight - 50;
+                    
+                    ctx.fillStyle = colors[i];
+                    ctx.fillRect(x, y, barWidth - 10, barHeight);
+                    
+                    // Add value label
+                    ctx.fillStyle = '#333';
+                    ctx.font = '12px Arial';
+                    ctx.textAlign = 'center';
+                    let displayValue = values[i];
+                    if (displayValue.length > 15) {
+                        displayValue = displayValue.substring(0, 12) + '...';
+                    }
+                    ctx.fillText(displayValue, x + barWidth / 2, canvas.height - 30);
+                    
+                    // Add count and percentage
+                    ctx.fillText(`${counts[i]} (${percentages[i]}%)`, x + barWidth / 2, y - 5);
+                }
+                
+                canvas.setAttribute('data-initialized', 'true');
+            }
+            {% endfor %}
+        }
+        
+        // Show the first column's data by default
+        const firstColumn = document.querySelector('.column-button');
+        if (firstColumn) {
+            firstColumn.click();
+        }
+    </script>
+</body>
+</html>
