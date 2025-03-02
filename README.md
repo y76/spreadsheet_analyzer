@@ -20,9 +20,6 @@ A powerful tool for analyzing spreadsheet data and generating reports in various
 git clone https://github.com/y76/spreadsheet-analyzer.git
 cd spreadsheet-analyzer
 pip install -e .
-
-# Or directly from PyPI (when published)
-pip install spreadsheet-analyzer
 ```
 
 ## Usage
