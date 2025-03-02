@@ -70,6 +70,7 @@ The HTML output provides an interactive interface where you can:
 - Search for specific columns
 - View value counts and percentages
 - Sort data by frequency
+![Uploading Screenshot_20250302_140528.png…]()
 
 ### JSON
 
