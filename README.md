@@ -17,7 +17,7 @@ A powerful tool for analyzing spreadsheet data and generating reports in various
 
 ```bash
 # Install from source
-git clone https://github.com/yourusername/spreadsheet-analyzer.git
+git clone https://github.com/y76/spreadsheet-analyzer.git
 cd spreadsheet-analyzer
 pip install -e .
 
