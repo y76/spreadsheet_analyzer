@@ -1,2 +1,0 @@
-[console_scripts]
-spreadsheet-analyzer = spreadsheet_analyzer.cli:main
